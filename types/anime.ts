@@ -10,7 +10,7 @@ type AnimeImages = {
 };
 
 export type Anime = {
-	id: number;
+	mal_id: number;
 	title: string;
 	images: AnimeImages;
 	genres: { name: string }[];

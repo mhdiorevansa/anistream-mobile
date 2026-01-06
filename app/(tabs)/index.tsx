@@ -2,9 +2,20 @@ import ContinueWatching from "@/components/sections/continue-watching";
 import RecentlyAdded from "@/components/sections/recently-added";
 import TrendingAnime from "@/components/sections/trending-anime";
 import TrendingNow from "@/components/sections/trending-now";
-import { Image, ScrollView, Text, View } from "react-native";
+import { useCallback, useState } from "react";
+import { Image, RefreshControl, ScrollView, Text, View } from "react-native";
 
 export default function HomeScreen() {
+	// pull to refresh
+	const [refreshing, setRefreshing] = useState(false);
+	const [refreshKey, setRefreshKey] = useState(0);
+	const onRefresh = useCallback(async () => {
+		setRefreshing(true);
+		setRefreshKey((prev) => prev + 1);
+		await new Promise((resolve) => setTimeout(resolve, 800));
+		setRefreshing(false);
+	}, []);
+
 	return (
 		<View className="bg-[#151718] h-full">
 			{/* header home section */}
@@ -19,15 +30,18 @@ export default function HomeScreen() {
 			</View>
 			<ScrollView
 				contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 20 }}
-				showsVerticalScrollIndicator={false}>
+				showsVerticalScrollIndicator={false}
+				refreshControl={
+					<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="white" />
+				}>
 				{/* trending anime section */}
-				<TrendingAnime />
+				<TrendingAnime refreshKey={refreshKey} />
 				{/* continue watching section */}
-				<ContinueWatching />
+				<ContinueWatching refreshKey={refreshKey} />
 				{/* trending now section */}
-				<TrendingNow />
+				<TrendingNow refreshKey={refreshKey} />
 				{/* recently added section */}
-				<RecentlyAdded />
+				<RecentlyAdded refreshKey={refreshKey} />
 			</ScrollView>
 		</View>
 	);

@@ -2,23 +2,37 @@ import { Anime } from "@/types/anime";
 import { useEffect, useState } from "react";
 import { FlatList, Image, Text, View } from "react-native";
 
-export default function ContinueWatching() {
+type Props = {
+	refreshKey: number;
+};
+
+export default function ContinueWatching({ refreshKey }: Props) {
 	const [continueWatching, setContinueWatching] = useState<Anime[]>([]);
+	const [loading, setLoading] = useState<boolean>(false);
 	useEffect(() => {
 		const fetchContinueWatching = async () => {
+			setLoading(continueWatching === null);
 			try {
 				const response = await fetch(
 					"https://api.jikan.moe/v4/anime?status=complete&order_by=end_date&sort=desc&limit=10"
 				);
 				const json = await response.json();
-				setContinueWatching(json.data);
+				if (Array.isArray(json?.data)) {
+					setContinueWatching(json.data);
+				}
 			} catch (error) {
-				throw error;
+				console.error("fetch error:", error);
 			}
 		};
 		fetchContinueWatching();
-	}, []);
-	if (!continueWatching) return null;
+	}, [refreshKey, continueWatching]);
+	if (loading) {
+		return (
+			<View className="mb-7">
+				<Text className="text-white/50">Loading...</Text>
+			</View>
+		);
+	}
 	return (
 		<View className="mb-7">
 			<View className="flex flex-row justify-between items-center mb-2">
@@ -27,7 +41,7 @@ export default function ContinueWatching() {
 			</View>
 			<FlatList
 				data={continueWatching}
-				keyExtractor={(item) => item.title}
+				keyExtractor={(item, index) => `${item.mal_id}-${index}`}
 				horizontal
 				showsHorizontalScrollIndicator={false}
 				ItemSeparatorComponent={() => <View className="w-4" />}
