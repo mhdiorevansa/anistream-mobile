@@ -9,6 +9,11 @@ type AnimeImages = {
 	webp?: AnimeImageFormat;
 };
 
+type AnimeTrailer = {
+	url: string;
+	embed_url: string;
+};
+
 export type Anime = {
 	mal_id: number;
 	title: string;
@@ -19,4 +24,7 @@ export type Anime = {
 	season: string;
 	rank: number;
 	episodes: number;
+	status: string;
+	synopsis: string;
+	trailer: AnimeTrailer;
 };

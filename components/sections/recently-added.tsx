@@ -1,6 +1,7 @@
 import { Anime } from "@/types/anime";
+import { router } from "expo-router";
 import { useEffect, useState } from "react";
-import { FlatList, Image, Text, View } from "react-native";
+import { FlatList, Image, Pressable, Text, View } from "react-native";
 
 type Props = {
 	refreshKey: number;
@@ -11,21 +12,23 @@ export default function RecentlyAdded({ refreshKey }: Props) {
 	const [loading, setLoading] = useState<boolean>(false);
 	useEffect(() => {
 		const fetchRecentlyAdded = async () => {
-			setLoading(recentlyAdded === null);
+			setLoading(true);
 			try {
 				const response = await fetch(
 					"https://api.jikan.moe/v4/anime?status=airing&order_by=start_date&sort=desc&limit=10"
 				);
 				const json = await response.json();
-				if (Array.isArray(json?.data)) {
+				if (json?.data) {
 					setRecentlyAdded(json.data);
 				}
 			} catch (error) {
 				console.error("fetch error:", error);
+			} finally {
+				setLoading(false);
 			}
 		};
 		fetchRecentlyAdded();
-	}, [refreshKey, recentlyAdded]);
+	}, [refreshKey]);
 	if (loading) {
 		return (
 			<View className="mb-7">
@@ -33,8 +36,15 @@ export default function RecentlyAdded({ refreshKey }: Props) {
 			</View>
 		);
 	}
+	if (!loading && recentlyAdded.length === 0) {
+		return (
+			<View className="mb-7">
+				<Text className="text-white/50">No have data recently added anime</Text>
+			</View>
+		);
+	}
 	return (
-		<View className="mb-3">
+		<>
 			<View className="flex flex-row justify-between items-center mb-2">
 				<Text className="text-xl font-bold text-white">Recently Added</Text>
 				<Text className="text-blue-500">See All</Text>
@@ -46,11 +56,18 @@ export default function RecentlyAdded({ refreshKey }: Props) {
 				showsHorizontalScrollIndicator={false}
 				ItemSeparatorComponent={() => <View className="w-4" />}
 				renderItem={({ item }) => (
-					<View className="w-52">
+					<Pressable
+						onPress={() =>
+							router.push({
+								pathname: "/anime/[id]",
+								params: { id: item.mal_id.toString() },
+							})
+						}
+						className="w-52">
 						<Image
 							className="w-52 h-72 rounded-xl mb-2"
 							source={{
-								uri: item.images.webp?.large_image_url,
+								uri: item.images.webp?.large_image_url ?? item.images.jpg?.large_image_url,
 							}}
 							resizeMode="cover"
 						/>
@@ -58,9 +75,9 @@ export default function RecentlyAdded({ refreshKey }: Props) {
 						<View className="flex-row flex-wrap">
 							<Text className="text-white/40">{item.genres.map((g) => g.name).join(" - ")}</Text>
 						</View>
-					</View>
+					</Pressable>
 				)}
 			/>
-		</View>
+		</>
 	);
 }

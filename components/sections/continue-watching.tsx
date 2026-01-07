@@ -1,6 +1,7 @@
 import { Anime } from "@/types/anime";
+import { router } from "expo-router";
 import { useEffect, useState } from "react";
-import { FlatList, Image, Text, View } from "react-native";
+import { FlatList, Image, Pressable, Text, View } from "react-native";
 
 type Props = {
 	refreshKey: number;
@@ -11,25 +12,34 @@ export default function ContinueWatching({ refreshKey }: Props) {
 	const [loading, setLoading] = useState<boolean>(false);
 	useEffect(() => {
 		const fetchContinueWatching = async () => {
-			setLoading(continueWatching === null);
+			setLoading(true);
 			try {
 				const response = await fetch(
 					"https://api.jikan.moe/v4/anime?status=complete&order_by=end_date&sort=desc&limit=10"
 				);
 				const json = await response.json();
-				if (Array.isArray(json?.data)) {
+				if (json?.data) {
 					setContinueWatching(json.data);
 				}
 			} catch (error) {
 				console.error("fetch error:", error);
+			} finally {
+				setLoading(false);
 			}
 		};
 		fetchContinueWatching();
-	}, [refreshKey, continueWatching]);
+	}, [refreshKey]);
 	if (loading) {
 		return (
 			<View className="mb-7">
 				<Text className="text-white/50">Loading...</Text>
+			</View>
+		);
+	}
+	if (!loading && continueWatching.length === 0) {
+		return (
+			<View className="mb-7">
+				<Text className="text-white/50">No have data continue watching anime</Text>
 			</View>
 		);
 	}
@@ -46,17 +56,24 @@ export default function ContinueWatching({ refreshKey }: Props) {
 				showsHorizontalScrollIndicator={false}
 				ItemSeparatorComponent={() => <View className="w-4" />}
 				renderItem={({ item }) => (
-					<View className="w-52">
+					<Pressable
+						onPress={() =>
+							router.push({
+								pathname: "/anime/[id]",
+								params: { id: item.mal_id.toString() },
+							})
+						}
+						className="w-52">
 						<Image
 							className="w-52 h-72 rounded-xl mb-2"
 							source={{
-								uri: item.images.webp?.large_image_url,
+								uri: item.images.webp?.large_image_url ?? item.images.jpg.large_image_url,
 							}}
 							resizeMode="cover"
 						/>
 						<Text className="text-white mb-1">{item.title}</Text>
 						<Text className="text-white/75">Episode {item.episodes}</Text>
-					</View>
+					</Pressable>
 				)}
 			/>
 		</View>

@@ -1,5 +1,6 @@
 import { Anime } from "@/types/anime";
 import { Feather } from "@expo/vector-icons";
+import { router } from "expo-router";
 import { useEffect, useState } from "react";
 import { Image, Pressable, Text, View } from "react-native";
 
@@ -12,19 +13,21 @@ export default function TrendingAnime({ refreshKey }: Props) {
 	const [loading, setLoading] = useState<boolean>(false);
 	useEffect(() => {
 		const fetchTrendingAnime = async () => {
-			setLoading(trendingAnime === null);
+			setLoading(true);
 			try {
 				const response = await fetch("https://api.jikan.moe/v4/top/anime");
 				const json = await response.json();
-				if (Array.isArray(json?.data)) {
+				if (json?.data) {
 					setTrendingAnime(json.data[0]);
 				}
 			} catch (error) {
 				console.error("fetch error:", error);
+			} finally {
+				setLoading(false);
 			}
 		};
 		fetchTrendingAnime();
-	}, [refreshKey, trendingAnime]);
+	}, [refreshKey]);
 	if (loading) {
 		return (
 			<View className="mb-7">
@@ -32,13 +35,31 @@ export default function TrendingAnime({ refreshKey }: Props) {
 			</View>
 		);
 	}
+	if (!loading && trendingAnime === null) {
+		return (
+			<View className="mb-7">
+				<Text className="text-white/50">No have data trending anime</Text>
+			</View>
+		);
+	}
+	if (!trendingAnime?.mal_id) return null;
 	return (
 		<View>
-			<Image
-				className="w-full h-80 rounded-xl mb-5"
-				source={{
-					uri: trendingAnime?.images.webp?.large_image_url,
-				}}></Image>
+			<Pressable
+				onPress={() =>
+					router.push({
+						pathname: "/anime/[id]",
+						params: { id: trendingAnime?.mal_id.toString() },
+					})
+				}>
+				<Image
+					className="w-full h-80 rounded-xl mb-5"
+					source={{
+						uri:
+							trendingAnime?.images.webp?.large_image_url ??
+							trendingAnime?.images.jpg?.large_image_url,
+					}}></Image>
+			</Pressable>
 			<View className="flex flex-row gap-3 mb-7">
 				<View className="p-1 bg-blue-500 rounded-full w-32">
 					<Text className="text-white text-center">Trending #1</Text>
