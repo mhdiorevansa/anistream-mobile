@@ -1,13 +1,13 @@
 import { Anime } from "@/types/anime";
 import { useEffect, useState } from "react";
-import { Text, View } from "react-native";
+import { ScrollView, Text, View } from "react-native";
 import YoutubePlayer from "react-native-youtube-iframe";
 
-type props = {
+type Props = {
 	id: number;
 };
 
-export default function OverviewAnime({ id }: props) {
+export default function OverviewAnime({ id }: Props) {
 	const [overview, setOverview] = useState<Anime | null>(null);
 	const [loading, setLoading] = useState<boolean>(false);
 	useEffect(() => {
@@ -40,7 +40,7 @@ export default function OverviewAnime({ id }: props) {
 	}
 	const videoId = getYoutubeVideoId(overview?.trailer?.embed_url);
 	return (
-		<View className="px-5 pb-14">
+		<ScrollView className="px-5 pb-14 h-[22rem]">
 			{videoId && (
 				<View className="w-full aspect-video rounded-xl overflow-hidden">
 					<YoutubePlayer height={220} play={false} videoId={videoId} />
@@ -50,6 +50,6 @@ export default function OverviewAnime({ id }: props) {
 				<Text className="text-white text-lg font-semibold mb-2">Synopsis</Text>
 				<Text className="text-white/50">{overview?.synopsis}</Text>
 			</View>
-		</View>
+		</ScrollView>
 	);
 }

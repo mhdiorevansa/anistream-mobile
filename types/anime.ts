@@ -27,4 +27,9 @@ export type Anime = {
 	status: string;
 	synopsis: string;
 	trailer: AnimeTrailer;
+	episode: string;
+	author_username: string;
+	date: string;
+	excerpt: string;
+	url: string;
 };

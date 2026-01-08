@@ -1,3 +1,5 @@
+import EpisodesAnime from "@/components/sections/episodes-anime";
+import { NewsAnime } from "@/components/sections/news-anime";
 import OverviewAnime from "@/components/sections/overview-anime";
 import { Anime } from "@/types/anime";
 import { Feather } from "@expo/vector-icons";
@@ -6,11 +8,14 @@ import { router, useLocalSearchParams } from "expo-router";
 import { useEffect, useState } from "react";
 import { Image, Pressable, ScrollView, Text, View } from "react-native";
 
+const tabsMenu: string[] = ["overview", "episodes", "news"];
+
 export default function AnimeDetailScreen() {
 	const { id } = useLocalSearchParams<{ id: string }>();
 	const [detailAnime, setDetailAnime] = useState<Anime | null>(null);
 	const [loading, setLoading] = useState<boolean>(true);
-	const [tabs, setTabs] = useState<"overview" | "episodes" | "news">("overview");
+	const [tabs, setTabs] = useState<string>("overview");
+	const [like, setLike] = useState<boolean>(false);
 	useEffect(() => {
 		const fetchDetailAnime = async () => {
 			try {
@@ -29,20 +34,21 @@ export default function AnimeDetailScreen() {
 	}, [id]);
 	if (loading) {
 		return (
-			<View className="mb-7">
+			<View className="px-5 pt-12">
 				<Text className="text-white/50">Loading...</Text>
 			</View>
 		);
 	}
 	if (!loading && detailAnime === null) {
 		return (
-			<View className="mb-7">
+			<View className="px-5 pt-12">
 				<Text className="text-white/50">Anime not found</Text>
 			</View>
 		);
 	}
 	return (
 		<ScrollView className="h-full">
+			{/* header */}
 			<View className="relative">
 				<Image
 					source={{
@@ -65,9 +71,9 @@ export default function AnimeDetailScreen() {
 							<Feather name="arrow-left" color="white" size={17} />
 						</Pressable>
 						<Pressable
-							onPress={() => console.log("like")}
+							onPress={() => setLike(!like)}
 							className="border border-white/30 p-3 rounded-full bg-black/30">
-							<Feather name="heart" color="white" size={17} />
+							<Feather name="heart" size={17} color={like ? "#ef4444" : "white"} />
 						</Pressable>
 					</View>
 				</View>
@@ -96,31 +102,20 @@ export default function AnimeDetailScreen() {
 					</View>
 				</View>
 			</View>
+			{/* tabs */}
 			<View className="flex-row gap-x-7 px-5 py-7">
-				<Pressable onPress={() => setTabs("overview")}>
-					<Text
-						className={`text-lg font-semibold ${
-							tabs === "overview" ? "text-blue-500" : "text-white"
-						}`}>
-						Overview
-					</Text>
-				</Pressable>
-				<Pressable onPress={() => setTabs("episodes")}>
-					<Text
-						className={`text-lg font-semibold ${
-							tabs === "episodes" ? "text-blue-500" : "text-white"
-						}`}>
-						Episodes
-					</Text>
-				</Pressable>
-				<Pressable onPress={() => setTabs("news")}>
-					<Text
-						className={`text-lg font-semibold ${tabs === "news" ? "text-blue-500" : "text-white"}`}>
-						News
-					</Text>
-				</Pressable>
+				{tabsMenu.map((t, index) => (
+					<Pressable key={index} onPress={() => setTabs(t)}>
+						<Text
+							className={`text-lg font-semibold ${tabs === t ? "text-blue-500" : "text-white"}`}>
+							{t}
+						</Text>
+					</Pressable>
+				))}
 			</View>
 			{tabs === "overview" && detailAnime?.mal_id && <OverviewAnime id={detailAnime?.mal_id} />}
+			{tabs === "episodes" && detailAnime?.mal_id && <EpisodesAnime id={detailAnime?.mal_id} />}
+			{tabs === "news" && detailAnime?.mal_id && <NewsAnime id={detailAnime?.mal_id} />}
 		</ScrollView>
 	);
 }
