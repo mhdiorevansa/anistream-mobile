@@ -1,112 +1,108 @@
-import { Image } from 'expo-image';
-import { Platform, StyleSheet } from 'react-native';
-
-import { ExternalLink } from '@/components/external-link';
-import ParallaxScrollView from '@/components/parallax-scroll-view';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { Collapsible } from "@/components/ui/collapsible";
-import { IconSymbol } from '@/components/ui/icon-symbol';
-import { Fonts } from '@/constants/theme';
+import Header from "@/components/sections/header";
+import { Anime } from "@/types/anime";
+import { router } from "expo-router";
+import { useEffect, useState } from "react";
+import { Image, Pressable, ScrollView, Text, TextInput, View } from "react-native";
 
 export default function SearchScreen() {
+	const [topAnime, setTopAnime] = useState<Anime[]>([]);
+	const [searchResult, setSearchResult] = useState<Anime[]>([]);
+	const [loading, setLoading] = useState(false);
+	const [search, setSearch] = useState<string>("");
+	useEffect(() => {
+		const fetchTopAnime = async () => {
+			setLoading(true);
+			try {
+				const response = await fetch("https://api.jikan.moe/v4/top/anime?limit=10");
+				const json = await response.json();
+				if (json?.data) {
+					setTopAnime(json.data);
+				}
+			} catch (error) {
+				console.error(error);
+			} finally {
+				setLoading(false);
+			}
+		};
+		fetchTopAnime();
+	}, []);
+	useEffect(() => {
+		const searchAnime = async (keyword: string) => {
+			setLoading(true);
+			try {
+				const response = await fetch(`https://api.jikan.moe/v4/anime?q=${keyword}`);
+				const json = await response.json();
+				if (json?.data) {
+					setSearchResult(json.data);
+				}
+			} catch (error) {
+				console.error(error);
+			} finally {
+				setLoading(false);
+			}
+		};
+		if (search.trim() === "") return;
+		const delay = setTimeout(() => {
+			searchAnime(search);
+		}, 400);
+		return () => clearTimeout(delay);
+	}, [search]);
+	const data = search ? searchResult : topAnime;
 	return (
-		<ParallaxScrollView
-			headerBackgroundColor={{ light: "#D0D0D0", dark: "#353636" }}
-			headerImage={
-				<IconSymbol
-					size={310}
-					color="#808080"
-					name="chevron.left.forwardslash.chevron.right"
-					style={styles.headerImage}
+		<View className="bg-[#151718] h-full">
+			{/* header */}
+			<Header />
+			<ScrollView className="px-5">
+				{/* search input */}
+				<TextInput
+					placeholder="Search anime..."
+					placeholderTextColor="#9CA3AF"
+					className="bg-white/10 text-white px-4 py-3 rounded-xl"
+					value={search}
+					onChangeText={setSearch}
+					autoCorrect={false}
 				/>
-			}>
-			<ThemedView style={styles.titleContainer}>
-				<ThemedText
-					type="title"
-					style={{
-						fontFamily: Fonts.rounded,
-					}}>
-					Explore
-				</ThemedText>
-			</ThemedView>
-			<ThemedText>This app includes example code to help you get started.</ThemedText>
-			<Collapsible title="File-based routing">
-				<ThemedText>
-					This app has two screens:{" "}
-					<ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> and{" "}
-					<ThemedText type="defaultSemiBold">app/(tabs)/explore.tsx</ThemedText>
-				</ThemedText>
-				<ThemedText>
-					The layout file in <ThemedText type="defaultSemiBold">app/(tabs)/_layout.tsx</ThemedText>{" "}
-					sets up the tab navigator.
-				</ThemedText>
-				<ExternalLink href="https://docs.expo.dev/router/introduction">
-					<ThemedText type="link">Learn more</ThemedText>
-				</ExternalLink>
-			</Collapsible>
-			<Collapsible title="Android, iOS, and web support">
-				<ThemedText>
-					You can open this project on Android, iOS, and the web. To open the web version, press{" "}
-					<ThemedText type="defaultSemiBold">w</ThemedText> in the terminal running this project.
-				</ThemedText>
-			</Collapsible>
-			<Collapsible title="Images">
-				<ThemedText>
-					For static images, you can use the <ThemedText type="defaultSemiBold">@2x</ThemedText> and{" "}
-					<ThemedText type="defaultSemiBold">@3x</ThemedText> suffixes to provide files for
-					different screen densities
-				</ThemedText>
-				<Image
-					source={require("@/assets/images/react-logo.png")}
-					style={{ width: 100, height: 100, alignSelf: "center" }}
-				/>
-				<ExternalLink href="https://reactnative.dev/docs/images">
-					<ThemedText type="link">Learn more</ThemedText>
-				</ExternalLink>
-			</Collapsible>
-			<Collapsible title="Light and dark mode components">
-				<ThemedText>
-					This template has light and dark mode support. The{" "}
-					<ThemedText type="defaultSemiBold">useColorScheme()</ThemedText> hook lets you inspect
-					what the user&apos;s current color scheme is, and so you can adjust UI colors accordingly.
-				</ThemedText>
-				<ExternalLink href="https://docs.expo.dev/develop/user-interface/color-themes/">
-					<ThemedText type="link">Learn more</ThemedText>
-				</ExternalLink>
-			</Collapsible>
-			<Collapsible title="Animations">
-				<ThemedText>
-					This template includes an example of an animated component. The{" "}
-					<ThemedText type="defaultSemiBold">components/HelloWave.tsx</ThemedText> component uses
-					the powerful{" "}
-					<ThemedText type="defaultSemiBold" style={{ fontFamily: Fonts.mono }}>
-						react-native-reanimated
-					</ThemedText>{" "}
-					library to create a waving hand animation.
-				</ThemedText>
-				{Platform.select({
-					ios: (
-						<ThemedText>
-							The <ThemedText type="defaultSemiBold">components/ParallaxScrollView.tsx</ThemedText>{" "}
-							component provides a parallax effect for the header image.
-						</ThemedText>
-					),
-				})}
-			</Collapsible>
-		</ParallaxScrollView>
+				{/* top anime */}
+				<View className="my-6">
+					<Text className="text-white font-semibold text-lg mb-3">
+						{search ? `Search Result for "${search}"` : "Top 10 Anime"}
+					</Text>
+					{loading && <Text className="text-white/50 mb-3">Loading...</Text>}
+					{!loading && data.length === 0 && (
+						<Text className="text-white/50 mb-3">No data found</Text>
+					)}
+					<View className="flex-col gap-4">
+						{data.map((item) => (
+							<Pressable
+								onPress={() =>
+									router.push({
+										pathname: "/anime/[id]",
+										params: { id: item.mal_id.toString() },
+									})
+								}
+								key={item.mal_id}
+								className="flex-row gap-4 bg-white/5 p-3 rounded-xl">
+								<View className="w-20 h-28 rounded-lg overflow-hidden bg-white/10">
+									<Image
+										source={{ uri: item.images.jpg.image_url }}
+										style={{ width: "100%", height: "100%" }}
+									/>
+								</View>
+								<View className="flex-1 justify-between">
+									<View>
+										<Text className="text-white font-semibold" numberOfLines={2}>
+											{item.title}
+										</Text>
+										<Text className="text-white/50 text-sm mt-1">
+											⭐ {item.score ?? "-"} • {item.year ?? "-"}
+										</Text>
+									</View>
+								</View>
+							</Pressable>
+						))}
+					</View>
+				</View>
+			</ScrollView>
+		</View>
 	);
 }
-
-const styles = StyleSheet.create({
-  headerImage: {
-    color: '#808080',
-    bottom: -90,
-    left: -35,
-    position: 'absolute',
-  },
-  titleContainer: {
-    flexDirection: 'row',
-    gap: 8,
-  },
-});

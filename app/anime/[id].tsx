@@ -79,7 +79,7 @@ export default function AnimeDetailScreen() {
 				</View>
 				<View className="absolute bottom-0 left-0 right-0 px-5 pb-7">
 					<View className="flex-row items-center justify-between mb-2">
-						<View className="w-60">
+						<View className="w-80">
 							<Text className="text-white font-semibold text-xl">{detailAnime?.title}</Text>
 							<Text className="text-white/50">{detailAnime?.status}</Text>
 						</View>
