@@ -9,6 +9,15 @@ export default function SearchScreen() {
 	const [searchResult, setSearchResult] = useState<Anime[]>([]);
 	const [loading, setLoading] = useState(false);
 	const [search, setSearch] = useState<string>("");
+	const fetchStatistic = async (id: number) => {
+		try {
+			const response = await fetch(`https://api.jikan.moe/v4/anime/${id}/statistics`);
+			const json = await response.json();
+			return json?.data?.watching ?? 0;
+		} catch (error) {
+			console.log(error);
+		}
+	};
 	useEffect(() => {
 		const fetchTopAnime = async () => {
 			setLoading(true);
@@ -16,7 +25,13 @@ export default function SearchScreen() {
 				const response = await fetch("https://api.jikan.moe/v4/top/anime?limit=10");
 				const json = await response.json();
 				if (json?.data) {
-					setTopAnime(json.data);
+					const withStatistic = await Promise.all(
+						json.data.map(async (anime: Anime) => {
+							const statistic = await fetchStatistic(anime.mal_id);
+							return { ...anime, watching: statistic };
+						})
+					);
+					setTopAnime(withStatistic);
 				}
 			} catch (error) {
 				console.error(error);
@@ -33,7 +48,13 @@ export default function SearchScreen() {
 				const response = await fetch(`https://api.jikan.moe/v4/anime?q=${keyword}`);
 				const json = await response.json();
 				if (json?.data) {
-					setSearchResult(json.data);
+					const withStatistic = await Promise.all(
+						json.data.map(async (anime: Anime) => {
+							const statistic = await fetchStatistic(anime.mal_id);
+							return { ...anime, watching: statistic };
+						})
+					);
+					setSearchResult(withStatistic);
 				}
 			} catch (error) {
 				console.error(error);
@@ -95,6 +116,13 @@ export default function SearchScreen() {
 										</Text>
 										<Text className="text-white/50 text-sm mt-1">
 											⭐ {item.score ?? "-"} • {item.year ?? "-"}
+										</Text>
+										<Text className="text-white/50 text-sm mt-1">
+											{new Intl.NumberFormat("en", {
+												notation: "compact",
+												maximumFractionDigits: 1,
+											}).format(item.watching ?? 0)}{" "}
+											Watching
 										</Text>
 									</View>
 								</View>

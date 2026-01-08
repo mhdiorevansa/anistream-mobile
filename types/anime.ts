@@ -32,4 +32,5 @@ export type Anime = {
 	date: string;
 	excerpt: string;
 	url: string;
+	watching: number;
 };
